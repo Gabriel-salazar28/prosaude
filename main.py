@@ -18,6 +18,59 @@ def format_date(field):
         
         field.update()
 
+def validate_form(e, page, campos):
+    # Validação dos campos
+    is_valid = True
+    mensagens_erro = []
+
+    # Verifica campos de texto
+    for campo in campos['text_fields']:
+        if not campo.value:
+            campo.error_text = "Campo obrigatório"
+            campo.border_color = "red"
+            is_valid = False
+        else:
+            campo.error_text = None
+            campo.border_color = None
+
+    # Verifica radio groups
+    for radio_group in campos['radio_groups']:
+        if not radio_group.value:
+            for radio in radio_group.content.controls:
+                radio.label_style = ft.TextStyle(color="red")
+            is_valid = False
+        else:
+            for radio in radio_group.content.controls:
+                radio.label_style = None
+
+    # Verifica se pelo menos um checkbox foi marcado em cada grupo
+    for grupo in campos['checkbox_groups']:
+        if not any(checkbox.value for checkbox in grupo):
+            for checkbox in grupo:
+                checkbox.label_style = ft.TextStyle(color="red")
+            is_valid = False
+        else:
+            for checkbox in grupo:
+                checkbox.label_style = None
+
+    # Verifica o checkbox de consentimento
+    if not campos['consentimento'].value:
+        campos['consentimento'].label_style = ft.TextStyle(color="red")
+        is_valid = False
+    else:
+        campos['consentimento'].label_style = None
+
+    page.update()
+
+    if not is_valid:
+        page.show_snack_bar(
+            ft.SnackBar(
+                content=ft.Text("Por favor, preencha todos os campos obrigatórios"),
+                bgcolor=ft.colors.RED_400
+            )
+        )
+    return is_valid
+
 def main(page: Page):
     # Configuração da janela
     page.window_width = 1920
@@ -34,6 +87,148 @@ def main(page: Page):
     page.spacing = 0
     page.bgcolor = "#6495ED"  # Definindo a cor de fundo na página
     
+    # Criar todas as referências necessárias
+    # Campos de texto
+    nome_field = ft.TextField(label="Nome completo*", width=300)
+    data_nasc_field = ft.TextField(
+        label="Data de Nascimento*",
+        width=150,
+        bgcolor="white",
+        hint_text="DD/MM/AAAA",
+        max_length=10,
+        on_change=lambda e: format_date(e.control)
+    )
+    altura_field = ft.TextField(label="Altura*", width=100, bgcolor="white", suffix_text="cm")
+    peso_field = ft.TextField(label="Peso*", width=100, bgcolor="white", suffix_text="kg")
+    email_field = ft.TextField(label="E-mail*", width=300, bgcolor="white")
+
+    # Radio Groups
+    sexo_group = ft.RadioGroup(
+        content=ft.Row([
+            ft.Radio(value="M", label="Masculino"),
+            ft.Radio(value="F", label="Feminino"),
+            ft.Radio(value="O", label="Outro"),
+        ])
+    )
+    
+    atividade_fisica_group = ft.RadioGroup(
+        content=ft.Column([
+            ft.Radio(value="nunca", label="Nunca"),
+            ft.Radio(value="1-2", label="1 a 2 vezes por semana"),
+            ft.Radio(value="3-5", label="3 a 5 vezes por semana"),
+            ft.Radio(value="diario", label="Todos os dias"),
+        ])
+    )
+
+    alcool_group = ft.RadioGroup(
+        content=ft.Column([
+            ft.Radio(value="nunca", label="Nunca"),
+            ft.Radio(value="ocasionalmente", label="Ocasionalmente"),
+            ft.Radio(value="frequentemente", label="Frequentemente"),
+        ])
+    )
+
+    fumo_group = ft.RadioGroup(
+        content=ft.Row([
+            ft.Radio(value="sim", label="Sim"),
+            ft.Radio(value="nao", label="Não"),
+        ]),
+    )
+
+    estresse_group = ft.RadioGroup(
+        content=ft.Column([
+            ft.Radio(value="baixo", label="Baixo"),
+            ft.Radio(value="moderado", label="Moderado"),
+            ft.Radio(value="alto", label="Alto"),
+        ]),
+    )
+
+    sono_group = ft.RadioGroup(
+        content=ft.Column([
+            ft.Radio(value="boa", label="Boa, durmo bem todas as noites"),
+            ft.Radio(value="regular", label="Regular, às vezes tenho dificuldade para dormir"),
+            ft.Radio(value="ruim", label="Ruim, tenho insônia ou acordo cansado"),
+        ]),
+    )
+
+    # Checkboxes para condições de saúde
+    diabetes_check = ft.Checkbox(label="Diabetes", value=False)
+    hipertensao_check = ft.Checkbox(label="Hipertensão (pressão alta)", value=False)
+    cardiacos_check = ft.Checkbox(label="Problemas cardíacos", value=False)
+    respiratorias_check = ft.Checkbox(label="Doenças respiratórias", value=False)
+    autoimunes_check = ft.Checkbox(label="Doenças autoimunes", value=False)
+    alergias_check = ft.Checkbox(label="Alergias", value=False)
+    coluna_check = ft.Checkbox(label="Problemas de coluna ou articulações", value=False)
+    nenhuma_condicao_check = ft.Checkbox(label="Nenhuma das opções", value=False)
+
+    # Checkboxes para queixas de saúde
+    dor_cabeca_check = ft.Checkbox(label="Dores de cabeça", value=False)
+    digestivos_check = ft.Checkbox(label="Problemas digestivos", value=False)
+    dores_musculares_check = ft.Checkbox(label="Dores musculares ou articulares", value=False)
+    ansiedade_check = ft.Checkbox(label="Ansiedade ou sintomas depressivos", value=False)
+    nenhuma_queixa_check = ft.Checkbox(label="Nenhuma das opções", value=False)
+
+    # Checkbox de consentimento
+    consentimento_check = ft.Checkbox(label="Sim, concordo", value=False)
+
+    def validate_form(e):
+        is_valid = True
+
+        # Validar campos de texto
+        text_fields = [nome_field, data_nasc_field, altura_field, peso_field, email_field]
+        for field in text_fields:
+            if not field.value:
+                field.error_text = "Campo obrigatório"
+                field.border_color = "red"
+                is_valid = False
+            else:
+                field.error_text = None
+                field.border_color = None
+
+        # Validar radio groups
+        radio_groups = [sexo_group, atividade_fisica_group, alcool_group, fumo_group, estresse_group, sono_group]
+        for group in radio_groups:
+            if not group.value:
+                for radio in group.content.controls:
+                    radio.label_style = ft.TextStyle(color="red")
+                is_valid = False
+            else:
+                for radio in group.content.controls:
+                    radio.label_style = None
+
+        # Validar grupos de checkbox (pelo menos um selecionado em cada grupo)
+        condicoes_saude = [diabetes_check, hipertensao_check, cardiacos_check, respiratorias_check,
+                          autoimunes_check, alergias_check, coluna_check, nenhuma_condicao_check]
+        queixas_saude = [dor_cabeca_check, digestivos_check, dores_musculares_check,
+                        ansiedade_check, nenhuma_queixa_check]
+
+        for grupo in [condicoes_saude, queixas_saude]:
+            if not any(check.value for check in grupo):
+                for check in grupo:
+                    check.label_style = ft.TextStyle(color="red")
+                is_valid = False
+            else:
+                for check in grupo:
+                    check.label_style = None
+
+        # Validar consentimento
+        if not consentimento_check.value:
+            consentimento_check.label_style = ft.TextStyle(color="red")
+            is_valid = False
+        else:
+            consentimento_check.label_style = None
+
+        page.update()
+
+        if not is_valid:
+            page.show_snack_bar(
+                ft.SnackBar(
+                    content=ft.Text("Por favor, preencha todos os campos obrigatórios"),
+                    bgcolor=ft.colors.RED_400
+                )
+            )
+        return is_valid
+
     # Área principal
     page.add(
         ft.Container(
@@ -49,8 +244,8 @@ def main(page: Page):
                     ft.Container(
                         content=ft.Image(
                             src="cerebro.png",
-                            width=200,
-                            height=200,
+                            width=300,
+                            height=300,
                             fit=ft.ImageFit.CONTAIN
                         ),
                         alignment=ft.alignment.center,
@@ -59,7 +254,7 @@ def main(page: Page):
                     ft.Container(
                         content=ft.Text(
                             "ProSaúde",
-                            size=43,
+                            size=50,
                             font_family="Times New Roman",
                             text_align=ft.TextAlign.CENTER,
                             color=ft.colors.WHITE,
@@ -86,60 +281,40 @@ def main(page: Page):
                                         # Todo o conteúdo do formulário anterior aqui
                                         # Apenas atualizando algumas cores já que o fundo agora é branco
                                         ft.Text("1. DADOS PESSOAIS", size=20, weight=ft.FontWeight.BOLD, color="#6495ED"),
-                                        ft.TextField(label="Nome completo", width=300),
+                                        nome_field,
                                         ft.Row([
-                                            ft.TextField(
-                                                label="Data de Nascimento",
-                                                width=150,
-                                                bgcolor="white",
-                                                hint_text="DD/MM/AAAA",  # Texto de exemplo
-                                                max_length=10,  # Limita a 10 caracteres (DD/MM/AAAA)
-                                                on_change=lambda e: format_date(e.control),  # Formata enquanto digita
-                                            ),
-                                            ft.Text("Sexo:", color="black", weight=ft.FontWeight.BOLD),
-                                            ft.RadioGroup(
-                                                content=ft.Row([
-                                                    ft.Radio(value="M", label="Masculino"),
-                                                    ft.Radio(value="F", label="Feminino"),
-                                                    ft.Radio(value="O", label="Outro"),
-                                                ]),
-                                            ),
+                                            data_nasc_field,
+                                            ft.Text("Sexo:*", color="black", weight=ft.FontWeight.BOLD),
+                                            sexo_group,
                                         ]),
                                         ft.Row([
-                                            ft.TextField(label="Altura", width=100, bgcolor="white", suffix_text="cm"),
-                                            ft.TextField(label="Peso", width=100, bgcolor="white", suffix_text="kg"),
+                                            altura_field,
+                                            peso_field,
                                         ]),
-                                        ft.TextField(label="E-mail", width=300, bgcolor="white"),
+                                        email_field,
                                         
                                         ft.Divider(),
                                         
                                         # Seção 2 - Condições de Saúde
                                         ft.Text("2. CONDIÇÕES DE SAÚDE", size=20, weight=ft.FontWeight.BOLD, color="#6495ED"),
-                                        ft.Text("Você possui ou já teve alguma das seguintes condições?", color="black"),
+                                        ft.Text("Você possui ou já teve alguma das seguintes condições?*", color="black"),
                                         ft.Column([
-                                            ft.Checkbox(label="Diabetes", value=False),
-                                            ft.Checkbox(label="Hipertensão (pressão alta)", value=False),
-                                            ft.Checkbox(label="Problemas cardíacos", value=False),
-                                            ft.Checkbox(label="Doenças respiratórias", value=False),
-                                            ft.Checkbox(label="Doenças autoimunes", value=False),
-                                            ft.Checkbox(label="Alergias", value=False),
-                                            ft.Checkbox(label="Problemas de coluna ou articulações", value=False),
-                                            ft.Checkbox(label="Nenhuma das opções", value=False),
+                                            diabetes_check,
+                                            hipertensao_check,
+                                            cardiacos_check,
+                                            respiratorias_check,
+                                            autoimunes_check,
+                                            alergias_check,
+                                            coluna_check,
+                                            nenhuma_condicao_check,
                                         ]),
                                         
                                         ft.Divider(),
                                         
                                         # Seção 3 - Estilo de Vida
                                         ft.Text("3. ESTILO DE VIDA", size=20, weight=ft.FontWeight.BOLD, color="#6495ED"),
-                                        ft.Text("Com que frequência você pratica atividades físicas?", color="black"),
-                                        ft.RadioGroup(
-                                            content=ft.Column([
-                                                ft.Radio(value="nunca", label="Nunca"),
-                                                ft.Radio(value="1-2", label="1 a 2 vezes por semana"),
-                                                ft.Radio(value="3-5", label="3 a 5 vezes por semana"),
-                                                ft.Radio(value="diario", label="Todos os dias"),
-                                            ]),
-                                        ),
+                                        ft.Text("Com que frequência você pratica atividades físicas?*", color="black"),
+                                        atividade_fisica_group,
                                         
                                         ft.Text("Você segue alguma dieta específica?", color="black"),
                                         ft.Row([
@@ -152,52 +327,29 @@ def main(page: Page):
                                             ft.TextField(label="Qual?", width=200, bgcolor="white"),
                                         ]),
                                         
-                                        ft.Text("Com que frequência você consome bebidas alcoólicas?", color="black"),
-                                        ft.RadioGroup(
-                                            content=ft.Column([
-                                                ft.Radio(value="nunca", label="Nunca"),
-                                                ft.Radio(value="ocasionalmente", label="Ocasionalmente"),
-                                                ft.Radio(value="frequentemente", label="Frequentemente"),
-                                            ]),
-                                        ),
+                                        ft.Text("Com que frequência você consome bebidas alcoólicas?*", color="black"),
+                                        alcool_group,
                                         
-                                        ft.Text("Você fuma?", color="black"),
-                                        ft.RadioGroup(
-                                            content=ft.Row([
-                                                ft.Radio(value="sim", label="Sim"),
-                                                ft.Radio(value="nao", label="Não"),
-                                            ]),
-                                        ),
+                                        ft.Text("Você fuma?*", color="black"),
+                                        fumo_group,
                                         
                                         ft.Divider(),
                                         
                                         # Seção 4 - Saúde Mental
                                         ft.Text("4. SAÚDE MENTAL E QUALIDADE DE VIDA", size=20, weight=ft.FontWeight.BOLD, color="#6495ED"),
-                                        ft.Text("Nos últimos meses, como você avaliaria seu nível de estresse?", color="black"),
-                                        ft.RadioGroup(
-                                            content=ft.Column([
-                                                ft.Radio(value="baixo", label="Baixo"),
-                                                ft.Radio(value="moderado", label="Moderado"),
-                                                ft.Radio(value="alto", label="Alto"),
-                                            ]),
-                                        ),
+                                        ft.Text("Nos últimos meses, como você avaliaria seu nível de estresse?*", color="black"),
+                                        estresse_group,
                                         
-                                        ft.Text("Como está a qualidade do seu sono?", color="black"),
-                                        ft.RadioGroup(
-                                            content=ft.Column([
-                                                ft.Radio(value="boa", label="Boa, durmo bem todas as noites"),
-                                                ft.Radio(value="regular", label="Regular, às vezes tenho dificuldade para dormir"),
-                                                ft.Radio(value="ruim", label="Ruim, tenho insônia ou acordo cansado"),
-                                            ]),
-                                        ),
+                                        ft.Text("Como está a qualidade do seu sono?*", color="black"),
+                                        sono_group,
                                         
-                                        ft.Text("Você tem alguma queixa de saúde frequente?", color="black"),
+                                        ft.Text("Você tem alguma queixa de saúde frequente?*", color="black"),
                                         ft.Column([
-                                            ft.Checkbox(label="Dores de cabeça", value=False),
-                                            ft.Checkbox(label="Problemas digestivos", value=False),
-                                            ft.Checkbox(label="Dores musculares ou articulares", value=False),
-                                            ft.Checkbox(label="Ansiedade ou sintomas depressivos", value=False),
-                                            ft.Checkbox(label="Nenhuma das opções", value=False),
+                                            dor_cabeca_check,
+                                            digestivos_check,
+                                            dores_musculares_check,
+                                            ansiedade_check,
+                                            nenhuma_queixa_check,
                                         ]),
                                         
                                         ft.Divider(),
@@ -205,10 +357,13 @@ def main(page: Page):
                                         # Seção 6 - Consentimento
                                         ft.Text("6. CONSENTIMENTO", size=20, weight=ft.FontWeight.BOLD, color="#6495ED"),
                                         ft.Text(
-                                            "Declaro que as informações fornecidas são verdadeiras e autorizo o uso dos meus dados para receber recomendações de saúde e bem-estar.",
+                                            "Declaro que as informações fornecidas são verdadeiras e autorizo o uso dos meus dados para receber recomendações de saúde e bem-estar.*",
                                             color="black",
                                         ),
-                                        ft.Checkbox(label="Sim, concordo", value=False),
+                                        consentimento_check,
+                                        
+                                        # Adicione asterisco aos campos obrigatórios
+                                        ft.Text("* Campos obrigatórios", size=12, color="red", italic=True),
                                         
                                         # Botão de Envio
                                         ft.ElevatedButton(
@@ -216,6 +371,7 @@ def main(page: Page):
                                             width=150,
                                             bgcolor=ft.colors.BLUE_700,
                                             color=ft.colors.WHITE,
+                                            on_click=validate_form
                                         ),
                                     ]),
                                     padding=20,
