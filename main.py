@@ -27,6 +27,28 @@ def main(page: Page):
             content=ft.Column(
                 expand=True,
                 controls=[
+                    ft.Container(
+                        content=ft.Image(
+                            src="cerebro.png",
+                            width=200,
+                            height=200,
+                            fit=ft.ImageFit.CONTAIN
+                        ),
+                        alignment=ft.alignment.center,
+                        padding=ft.padding.only(top=20)
+                    ),
+                    ft.Container(
+                        content=ft.Text(
+                            "ProSaúde",
+                            size=43,
+                            font_family="Times New Roman",
+                            text_align=ft.TextAlign.CENTER,
+                            color=ft.colors.WHITE,
+                            weight=ft.FontWeight.BOLD
+                        ),
+                        alignment=ft.alignment.center,
+                        padding=ft.padding.only(top=20)
+                    ),
                     # Aqui serão adicionados os componentes futuros
                 ]
             )
