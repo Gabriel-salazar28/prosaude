@@ -414,7 +414,48 @@ def main(page: Page):
                 )
             )
         else:
-            page.go('/resultados')  # Navega para a nova página
+            # Salvar dados em arquivo texto
+            dados = {
+                "Nome": nome_field.value,
+                "Data de Nascimento": data_nasc_field.value,
+                "Sexo": sexo_group.value,
+                "Altura": altura_field.value,
+                "Peso": peso_field.value,
+                "Email": email_field.value,
+                "Atividade Física": atividade_fisica_group.value,
+                "Consumo de Álcool": alcool_group.value,
+                "Fumante": fumo_group.value,
+                "Nível de Estresse": estresse_group.value,
+                "Qualidade do Sono": sono_group.value,
+                "Condições de Saúde": [
+                    check.label for check in [diabetes_check, hipertensao_check, cardiacos_check, 
+                    respiratorias_check, autoimunes_check, alergias_check, coluna_check] 
+                    if check.value
+                ],
+                "Queixas de Saúde": [
+                    check.label for check in [dor_cabeca_check, digestivos_check, 
+                    dores_musculares_check, ansiedade_check] 
+                    if check.value
+                ]
+            }
+            
+            try:
+                with open("dados_usuario.txt", "w", encoding="utf-8") as arquivo:
+                    for chave, valor in dados.items():
+                        if isinstance(valor, list):
+                            arquivo.write(f"{chave}: {', '.join(valor)}\n")
+                        else:
+                            arquivo.write(f"{chave}: {valor}\n")
+                            
+                page.go('/resultados')  # Redireciona para a nova página
+                
+            except Exception as e:
+                page.show_snack_bar(
+                    ft.SnackBar(
+                        content=ft.Text("Erro ao salvar os dados. Tente novamente."),
+                        bgcolor=ft.colors.RED_400
+                    )
+                )
         
         return is_valid
 
