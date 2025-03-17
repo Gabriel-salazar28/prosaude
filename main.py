@@ -171,66 +171,29 @@ def main(page: Page):
     # Checkbox de consentimento
     consentimento_check = ft.Checkbox(label="Sim, concordo", value=False)
 
-    def validate_form(e):
-        is_valid = True
-
-        # Validar campos de texto
-        text_fields = [nome_field, data_nasc_field, altura_field, peso_field, email_field]
-        for field in text_fields:
-            if not field.value:
-                field.error_text = "Campo obrigatório"
-                field.border_color = "red"
-                is_valid = False
-            else:
-                field.error_text = None
-                field.border_color = None
-
-        # Validar radio groups
-        radio_groups = [sexo_group, atividade_fisica_group, alcool_group, fumo_group, estresse_group, sono_group]
-        for group in radio_groups:
-            if not group.value:
-                for radio in group.content.controls:
-                    radio.label_style = ft.TextStyle(color="red")
-                is_valid = False
-            else:
-                for radio in group.content.controls:
-                    radio.label_style = None
-
-        # Validar grupos de checkbox (pelo menos um selecionado em cada grupo)
-        condicoes_saude = [diabetes_check, hipertensao_check, cardiacos_check, respiratorias_check,
-                          autoimunes_check, alergias_check, coluna_check, nenhuma_condicao_check]
-        queixas_saude = [dor_cabeca_check, digestivos_check, dores_musculares_check,
-                        ansiedade_check, nenhuma_queixa_check]
-
-        for grupo in [condicoes_saude, queixas_saude]:
-            if not any(check.value for check in grupo):
-                for check in grupo:
-                    check.label_style = ft.TextStyle(color="red")
-                is_valid = False
-            else:
-                for check in grupo:
-                    check.label_style = None
-
-        # Validar consentimento
-        if not consentimento_check.value:
-            consentimento_check.label_style = ft.TextStyle(color="red")
-            is_valid = False
-        else:
-            consentimento_check.label_style = None
-
-        page.update()
-
-        if not is_valid:
-            page.show_snack_bar(
-                ft.SnackBar(
-                    content=ft.Text("Por favor, preencha todos os campos obrigatórios"),
-                    bgcolor=ft.colors.RED_400
+    def route_change(route):
+        page.views.clear()
+        
+        if page.route == "/resultados":
+            # Página de resultados
+            page.views.append(
+                ft.View(
+                    route="/resultados",
+                    bgcolor="#6495ED",
+                    controls=[
+                        ft.Container(
+                            expand=True,
+                            bgcolor="#6495ED"
+                        )
+                    ]
                 )
             )
-        return is_valid
-
-    # Área principal
-    page.add(
+        else:
+            # Página inicial com o formulário
+            page.views.append(
+                ft.View(
+                    route="/",
+                    controls=[
         ft.Container(
             expand=True,
             bgcolor="#6495ED",
@@ -387,8 +350,76 @@ def main(page: Page):
                     ),
                 ]
             )
-        )
-    )
+                        )
+                    ]
+                )
+            )
+        
+        page.update()
+
+    def validate_form(e):
+        is_valid = True
+
+        # Validar campos de texto
+        text_fields = [nome_field, data_nasc_field, altura_field, peso_field, email_field]
+        for field in text_fields:
+            if not field.value:
+                field.error_text = "Campo obrigatório"
+                field.border_color = "red"
+                is_valid = False
+            else:
+                field.error_text = None
+                field.border_color = None
+
+        # Validar radio groups
+        radio_groups = [sexo_group, atividade_fisica_group, alcool_group, fumo_group, estresse_group, sono_group]
+        for group in radio_groups:
+            if not group.value:
+                for radio in group.content.controls:
+                    radio.label_style = ft.TextStyle(color="red")
+                is_valid = False
+            else:
+                for radio in group.content.controls:
+                    radio.label_style = None
+
+        # Validar grupos de checkbox (pelo menos um selecionado em cada grupo)
+        condicoes_saude = [diabetes_check, hipertensao_check, cardiacos_check, respiratorias_check,
+                          autoimunes_check, alergias_check, coluna_check, nenhuma_condicao_check]
+        queixas_saude = [dor_cabeca_check, digestivos_check, dores_musculares_check,
+                        ansiedade_check, nenhuma_queixa_check]
+
+        for grupo in [condicoes_saude, queixas_saude]:
+            if not any(check.value for check in grupo):
+                for check in grupo:
+                    check.label_style = ft.TextStyle(color="red")
+                is_valid = False
+            else:
+                for check in grupo:
+                    check.label_style = None
+
+        # Validar consentimento
+        if not consentimento_check.value:
+            consentimento_check.label_style = ft.TextStyle(color="red")
+            is_valid = False
+        else:
+            consentimento_check.label_style = None
+
+        page.update()
+
+        if not is_valid:
+            page.show_snack_bar(
+                ft.SnackBar(
+                    content=ft.Text("Por favor, preencha todos os campos obrigatórios"),
+                    bgcolor=ft.colors.RED_400
+                )
+            )
+        else:
+            page.go('/resultados')  # Navega para a nova página
+        
+        return is_valid
+
+    page.on_route_change = route_change
+    page.go('/')  # Define a rota inicial
 
 if __name__ == "__main__":
     ft.app(target=main) 
