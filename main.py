@@ -1,6 +1,23 @@
 import flet as ft
 from flet import Page, Window, WindowDragArea, colors
 
+def format_date(field):
+    # Remove caracteres não numéricos
+    text = ''.join(filter(str.isdigit, field.value)) if field.value else ''
+    
+    # Formata a data enquanto digita
+    if len(text) > 0:
+        if len(text) <= 2:
+            field.value = text
+        elif len(text) <= 4:
+            field.value = f"{text[:2]}/{text[2:]}"
+        elif len(text) <= 8:
+            field.value = f"{text[:2]}/{text[2:4]}/{text[4:]}"
+        else:
+            field.value = f"{text[:2]}/{text[2:4]}/{text[4:8]}"
+        
+        field.update()
+
 def main(page: Page):
     # Configuração da janela
     page.window_width = 1920
@@ -71,7 +88,14 @@ def main(page: Page):
                                         ft.Text("1. DADOS PESSOAIS", size=20, weight=ft.FontWeight.BOLD, color="#6495ED"),
                                         ft.TextField(label="Nome completo", width=300),
                                         ft.Row([
-                                            ft.TextField(label="Idade", width=100, bgcolor="white", suffix_text="anos"),
+                                            ft.TextField(
+                                                label="Data de Nascimento",
+                                                width=150,
+                                                bgcolor="white",
+                                                hint_text="DD/MM/AAAA",  # Texto de exemplo
+                                                max_length=10,  # Limita a 10 caracteres (DD/MM/AAAA)
+                                                on_change=lambda e: format_date(e.control),  # Formata enquanto digita
+                                            ),
                                             ft.Text("Sexo:", color="black", weight=ft.FontWeight.BOLD),
                                             ft.RadioGroup(
                                                 content=ft.Row([
